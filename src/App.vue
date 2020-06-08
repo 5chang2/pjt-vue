@@ -5,8 +5,7 @@
       <span v-if="isLogin">
         <router-link to="/articles">Articles</router-link> |
         <router-link to="/articles/create">Create</router-link> |
-        <!-- <router-link to="/accounts/logout" @click="logout">logout</router-link> -->
-        <span @click="logout">logout</span>
+        <router-link to="/articles/logout" @click.native="logout">logout</router-link>
       </span>
       <span v-else>
         <router-link to="/accounts/signup">signup</router-link> |
@@ -38,6 +37,18 @@ export default {
     }
   },
   methods:{
+    // key를 받아서 cookie에 저장 후 로그인 상태 
+    setCookie(key){
+      // default expire time: 1 day
+      // this.$cookies.set('auth-token', key, 60 * 60 * 24) => 60초 * 60분 * 24시간 => 하루뒤 만료
+      this.$cookies.set('auth-token', key)
+      this.isLogin = true
+    },
+    // auth-token 쿠키를 삭제 후 로그아웃 상태
+    removeCookie(){
+      this.$cookies.remove('auth-token')
+      this.isLogin = false
+    },
     signup(info) {
       const signupForm = new FormData()
       signupForm.append('username', info.username)
@@ -46,9 +57,7 @@ export default {
 
       axios.post(`${BACK_URL}/rest-auth/signup/`, signupForm)
         .then((res)=>{
-          this.$cookies.set('auth-token', res.data.key)
-          console.log(res.data)
-          this.isLogin = true
+          this.setCookie(res.data.key)
           this.$router.push('/')
         })
         .catch((err)=>{
@@ -62,14 +71,8 @@ export default {
 
       axios.post(`${BACK_URL}/rest-auth/login/`, loginForm)
         .then((res)=>{
-          console.log(res.data.key)
-          this.$cookies.set('auth-token', res.data.key)
-          this.isLogin = true
+          this.setCookie(res.data.key)
           this.$router.push('/')
-
-          // this.$cookies.set('auth-token', res.data.key, 5)
-          // this.$cookies.set("default_unit_second","input_value");            // 1 second after, expire
-
         })
         .catch((err)=>{
           console.log(err.response)
@@ -81,14 +84,10 @@ export default {
           Authorization: `token ${this.$cookies.get('auth-token')}`
         }
       }
-
       axios.post(`${BACK_URL}/rest-auth/logout/`, requestHeaders)
-        .then((res)=>{
-          this.$cookies.remove('auth-token')
-          console.log(res.response)
-          this.isLogin = false
+        .then(()=>{
+          this.removeCookie()
           this.$router.push('/')
-
         })
         .catch((err)=>{
           console.log(err.response)

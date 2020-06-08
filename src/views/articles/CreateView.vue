@@ -29,15 +29,12 @@ export default {
           Authorization: `token ${this.$cookies.get('auth-token')}`
         }
       }
-      console.log(requestHeaders)
-
       const requestForm = new FormData()
       requestForm.append('title', this.title)
       requestForm.append('content', this.content)
  
       axios.post(`${BACK_URL}/articles/create/`, requestForm, requestHeaders)
-        .then((res)=>{
-          console.log(res)
+        .then(()=>{
           this.$router.push('/articles/')
         })
         .catch((err)=>{
